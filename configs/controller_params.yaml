@@ -1,0 +1,71 @@
+﻿# =============================================================================
+# Controller parameters used by the current PFAL simulator / RL stack.
+# Active sections:
+#   1. pid_controller
+#   2. action_limits
+# The old rule_controller block was removed because it is not read by the
+# current PFALConventionalController or the RL environment.
+# =============================================================================
+
+pid_controller:
+  # Temperature PID [W/m^2]
+  temp_setpoint_day: 23.5
+  temp_setpoint_night: 19.0
+  temp_band_day_lo: 22.0
+  temp_band_day_hi: 25.0
+  temp_band_night_lo: 18.0
+  temp_band_night_hi: 20.0
+  kp_temp: 25.0
+  ki_temp: 6.0
+  kd_temp: 3.0
+  temp_integral_limit: 4.0
+
+  # Day/night CO2 PI [kg/m^2/s], driven by ppm error
+  co2_setpoint_day_ppm: 950.0
+  co2_setpoint_night_ppm: 400.0
+  co2_band_day_lo_ppm: 800.0
+  co2_band_day_hi_ppm: 1200.0
+  co2_band_night_lo_ppm: 400.0
+  co2_band_night_hi_ppm: 450.0
+  kp_co2: 2.5e-9
+  ki_co2: 5.0e-10
+  co2_integral_limit_ppm_h: 800.0
+
+  # VPD-scheduled humidity control
+  vpd_day_lo_kpa: 0.55
+  vpd_day_hi_kpa: 0.95
+  vpd_night_lo_kpa: 0.25
+  vpd_night_hi_kpa: 0.60
+  kp_vpd: 6.0e-6
+  ki_vpd: 2.0e-6
+  vpd_integral_limit_kpa_h: 0.6
+
+  # Feedforward gains
+  temp_ff_gain: 1.0
+  co2_ff_gain: 1.0
+  dehum_ff_gain: 1.0
+
+  # Slew-rate limits, scaled by dt / 1 h in code
+  rate_limit_Q: 180.0
+  rate_limit_CO2: 1.0e-6
+  rate_limit_dehum: 1.0e-5
+  derivative_filter_alpha: 0.25
+  transition_ramp_hours: 1.0
+
+action_limits:
+  # PPFD [umol/m^2/s]
+  I_max: 400.0
+  I_min: 0.0
+
+  # HVAC power density [W/m^2]
+  Q_HVAC_max: 212.0
+  Q_HVAC_min: -212.0
+
+  # CO2 injection [kg/m^2/s]
+  co2_supply_max: 1.0e-6
+  co2_supply_min: 0.0
+
+  # Dehumidification [kg/m^2/s]
+  dehum_max: 2.083e-5
+  dehum_min: 0.0
+

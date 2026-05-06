@@ -1,0 +1,254 @@
+# =============================================================================
+# Experiment configuration for code_0420.
+# Mainline: fixed photoperiod PP = 16 h and constant electricity price.
+# Extension: optional Zhejiang April-2025 time-of-use tariff scenarios.
+# =============================================================================
+
+# =============================================================================
+# Weather data
+# =============================================================================
+
+weather_data_dir: "data/weather"
+tmy_data_file: "outdoorWeatherWurGlas2014.csv"
+train_weather_dir: "weather/train"
+weather_sample_interval: 1800
+
+weather_columns:
+  time: 0
+  radiation: 1
+  temperature: 2
+  humidity: 3
+  wind_speed: 4
+  co2: 5
+
+# =============================================================================
+# Electricity pricing
+# =============================================================================
+
+# Mainline experiments use a fixed electricity price. TOU is enabled only in
+# dedicated extension experiments through CLI / run-config overrides.
+price_model_type: "constant"
+tou_tariff_scenario: "zhejiang_industrial_lt_1kv_2025_04"
+
+# Research proxy: repeated three-period TOU partition for daily-control studies.
+# Official Zhejiang billing time windows are seasonal and more complex; this
+# simplified partition is used only for the current RL/dispatch extension.
+time_of_use_periods:
+  peak: [8, 9, 10, 11, 18, 19, 20, 21]
+  flat: [6, 7, 12, 13, 14, 15, 16, 17, 22, 23]
+  valley: [0, 1, 2, 3, 4, 5]
+
+# Default extension proxy for a single-container low-voltage connection
+# (<1 kV), RMB/kWh, Zhejiang State Grid proxy industrial/commercial purchase
+# price, Apr 2025.
+time_of_use_prices:
+  peak: 1.1191
+  flat: 0.7460
+  valley: 0.3357
+
+# Canonical mainline fixed price used in the current paper baseline.
+constant_price: 0.74
+
+# Observation normalization range when the RL agent explicitly receives the
+# electricity-price signal.
+elec_price_normalization:
+  min: 0.3357
+  max: 1.1191
+
+# Predefined tariff scenarios for extension experiments.
+price_scenarios:
+  zhejiang_industrial_1_10_20kv_2025_04:
+    label: "Zhejiang industrial proxy tariff, Apr 2025, 1-10(20) kV"
+    price_model_type: "time_of_use"
+    constant_price: 0.7248
+    time_of_use_periods:
+      peak: [8, 9, 10, 11, 18, 19, 20, 21]
+      flat: [6, 7, 12, 13, 14, 15, 16, 17, 22, 23]
+      valley: [0, 1, 2, 3, 4, 5]
+    time_of_use_prices:
+      peak: 1.0873
+      flat: 0.7248
+      valley: 0.3262
+    elec_price_normalization:
+      min: 0.3262
+      max: 1.0873
+    source: "State Grid Zhejiang proxy industrial/commercial purchase price announcement, April 2025"
+  zhejiang_industrial_lt_1kv_2025_04:
+    label: "Zhejiang industrial proxy tariff, Apr 2025, below 1 kV"
+    price_model_type: "time_of_use"
+    constant_price: 0.7460
+    time_of_use_periods:
+      peak: [8, 9, 10, 11, 18, 19, 20, 21]
+      flat: [6, 7, 12, 13, 14, 15, 16, 17, 22, 23]
+      valley: [0, 1, 2, 3, 4, 5]
+    time_of_use_prices:
+      peak: 1.1191
+      flat: 0.7460
+      valley: 0.3357
+    elec_price_normalization:
+      min: 0.3357
+      max: 1.1191
+    source: "State Grid Zhejiang proxy industrial/commercial purchase price announcement, April 2025"
+
+# =============================================================================
+# Simulator
+# =============================================================================
+
+simulation_step: 600
+steps_per_year: 52560
+steps_per_day: 144
+
+photoperiod:
+  light_hours: 16
+  dark_hours: 8
+
+# =============================================================================
+# Global experiment settings
+# =============================================================================
+
+global_seed: 42
+n_experiment_repeats: 3
+n_weather_repeats: 3
+
+# Fixed evaluation schedules must use the current 4D contextual representation.
+fixed_eval_schedules:
+  - name: "default_schedule"
+    t1: 14
+    t2: 14
+    N1: 20
+    rho2: 36
+  - name: "high_throughput_dense"
+    t1: 10
+    t2: 14
+    N1: 10
+    rho2: 28
+  - name: "high_throughput_sparse"
+    t1: 10
+    t2: 14
+    N1: 10
+    rho2: 20
+  - name: "balanced_low_N1"
+    t1: 10
+    t2: 15
+    N1: 8
+    rho2: 24
+  - name: "short_cycle_mid_density"
+    t1: 12
+    t2: 12
+    N1: 16
+    rho2: 26
+  - name: "short_cycle_dense"
+    t1: 12
+    t2: 12
+    N1: 20
+    rho2: 48
+  - name: "balanced_sparse"
+    t1: 14
+    t2: 14
+    N1: 12
+    rho2: 24
+  - name: "long_cycle_mid_density"
+    t1: 16
+    t2: 16
+    N1: 15
+    rho2: 30
+  - name: "long_cycle_sparse"
+    t1: 16
+    t2: 16
+    N1: 20
+    rho2: 24
+  - name: "high_density_transition"
+    t1: 10
+    t2: 15
+    N1: 14
+    rho2: 42
+
+fixed_eval_weather:
+  - name: "winter"
+    start_day: 0
+    duration_days: 32
+  - name: "spring"
+    start_day: 91
+    duration_days: 32
+  - name: "summer"
+    start_day: 182
+    duration_days: 32
+  - name: "autumn"
+    start_day: 274
+    duration_days: 32
+
+# =============================================================================
+# RL ablation presets
+# =============================================================================
+
+ablation_experiments:
+  - name: "direct_contextual_sac"
+    description: "Absolute-action SAC without residual PID anchoring."
+    config:
+      controller_design: "contextual_sac"
+      curriculum_profile: "off"
+  - name: "direct_residual_pid_sac"
+    description: "Residual PID SAC without curriculum."
+    config:
+      controller_design: "residual_pid_sac"
+      curriculum_profile: "off"
+  - name: "curriculum_residual_pid_sac"
+    description: "Residual PID SAC with target-to-full curriculum."
+    config:
+      controller_design: "residual_pid_sac"
+      curriculum_profile: "target_to_full"
+  - name: "price_observation_on"
+    description: "Residual PID SAC with explicit electricity-price observation."
+    config:
+      include_electricity_price_observation: true
+
+# =============================================================================
+# Sensitivity studies
+# =============================================================================
+
+sensitivity_params:
+  - name: "electricity_price"
+    base_value: 0.74
+    variations: [0.37, 0.56, 0.74, 0.93, 1.11, 1.30]
+  - name: "co2_price"
+    base_value: 0.54
+    variations: [0.27, 0.41, 0.54, 0.68, 0.81]
+  - name: "crop_price"
+    base_value: 40.0
+    variations: [24.0, 32.0, 40.0, 48.0, 56.0]
+  - name: "model_param_uncertainty"
+    base_value: 0.0
+    variations: [0.0, 0.05, 0.10, 0.15, 0.20]
+
+# =============================================================================
+# Output paths
+# =============================================================================
+
+results_root: "results"
+model_save_dir: "results/models"
+log_save_dir: "results/logs"
+figure_save_dir: "results/figures"
+data_save_dir: "results/data"
+save_detailed_trajectories: true
+trajectory_format: "csv"
+
+# =============================================================================
+# Baseline controllers
+# =============================================================================
+
+rule_control:
+  light_intensity: 200
+  temp_setpoint: 22
+  co2_setpoint: 1000
+  vent_rate: 0.25
+  dehum_rate: 0.001
+
+mpc_baseline:
+  prediction_horizon: 24
+  control_horizon: 1
+  dt: 600
+
+smpc_baseline:
+  prediction_horizon: 24
+  n_scenarios: 10
+  uncertainty_level: 0.10

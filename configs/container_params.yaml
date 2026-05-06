@@ -1,0 +1,269 @@
+# =============================================================================
+# 集装箱/植物工厂参数配置文件
+# 仅包含被代码实际引用的参数
+# 来源: 基于 PFAL-DRL 项目中的物理模型参数
+# =============================================================================
+
+# =============================================================================
+# 几何参数 (来源: PFAL-DRL)
+# 被引用: plant_factory_env_new.py (计算太阳得热、墙体传热)
+# =============================================================================
+
+# 集装箱长度 [m]
+c_Length: 12.2
+
+# 集装箱宽度 [m]
+c_Width: 2.5
+
+# 集装箱高度 [m]
+c_Height: 3.0
+
+# 计算表面积 [m²]
+c_surface_area: 143.2
+
+# 集装箱体积 [m³]
+c_volume: 91.5
+
+# =============================================================================
+# 种植面积参数
+# 被引用: plant_factory_env_new.py, batch_manager.py, environment_model.py, simulate_hangzhou.py
+# =============================================================================
+
+# 总栽培面积 [m²] (育苗区 + 定植区)
+c_total_plant_area: 80.0
+
+# =============================================================================
+# 热力学参数 (来源: PFAL-DRL)
+# 被引用: plant_factory_env_new.py (热容计算), environment_model.py (ODE方程)
+# =============================================================================
+
+# 单位面积等效热容 [J/m²/°C]
+c_cap_q: 30000.0
+
+# 体积热容 [J/m³/°C]
+c_cap_q_v: 1290.0
+
+# 比热容 [J/kg/°C]
+c_cap_q_p: 1000.0
+
+# 墙体传热系数 [W/m²/°C]
+c_U: 0.3
+
+# 汽化潜热 [kJ/kg]
+c_lat_water: 2256.4
+
+# =============================================================================
+# 空气水汽参数 (来源: PFAL-DRL, Antoine方程)
+# 被引用: plant_factory_env_new.py (饱和水汽压), environment_model.py, batch_manager.py, crop_model.py
+# =============================================================================
+
+# Antoine方程系数 (无量纲修正系数) [-]
+c_v_0: 0.85
+
+# Antoine方程系数 [Pa]
+c_v_1: 611.0
+
+# Antoine方程系数 [-]
+c_v_2: 17.4
+
+# Antoine方程系数 [°C]
+c_v_3: 239.0
+
+# 分子量水 [kg/kmol]
+mw_water: 18.0
+
+# 通用气体常数 [J/K/kmol]
+c_R: 8314.0
+
+# 绝对零度转换 [K]
+c_T_abs: 273.0
+
+# =============================================================================
+# 植物蒸腾模型参数 (来源: PFAL-DRL, Van Henten 1994)
+# 被引用: plant_factory_env_new.py, batch_manager.py, crop_model.py
+# =============================================================================
+
+# 蒸腾叶面积系数 [m²/kg]
+c_a_pl: 62.8
+
+# 气孔-空气水汽流系数 [m/s]
+c_v_pl_ai: 0.0036
+
+# =============================================================================
+# 外部环境季节参数 (来源: PFAL-DRL)
+# 被引用: plant_factory_env_new.py (季节采样)
+# =============================================================================
+
+# 夏季外部温度 [°C]
+ext_temp_summer: 20.15
+
+# 夏季外部相对湿度 [-]
+ext_rh_summer: 0.8
+
+# 冬季外部温度 [°C]
+ext_temp_winter: -4.25
+
+# 冬季外部相对湿度 [-]
+ext_rh_winter: 0.86
+
+# =============================================================================
+# 光周期与温度目标值 (来源: PFAL-DRL)
+# 被引用: plant_factory_env_new.py (_default_config), batch_manager.py (_generate_photoperiod_seq)
+# =============================================================================
+
+# 光期时长 [h/天]
+photoperiod_on: 16
+
+# 暗期时长 [h/天]
+photoperiod_off: 8
+
+# 明期温度目标值 [°C] (batch_manager稳态初始化用)
+temp_target_day: 22.0
+
+# 暗期温度目标值 [°C] (batch_manager稳态初始化用)
+temp_target_night: 18.0
+
+# =============================================================================
+# 稳态初始化参数 (来源: PFAL-DRL)
+# 被引用: plant_factory_env_new.py (_default_config), batch_manager.py (_forward_integrate)
+# 注意: 光周期专用参数(T_day/T_night/C_day_ppm/C_night_ppm/RH_day/RH_night)
+#       已在 batch_manager._init_steady_state_params 中通过 cp.get() 读取
+# =============================================================================
+
+# 标准光强 [μmol/m²/s]
+I_standard: 200.0
+
+# Initialization targets used by the dual-zone steady-state batch initialiser.
+I_target_seedling: 200.0
+I_target_transplant: 300.0
+
+# 标准温度 [°C] (仅用于稳态初始化前向积分时的温度假设)
+T_standard: 22.0
+
+# 标准CO2浓度 [ppm] (明期)
+C_standard_ppm: 1000.0
+
+# 标准相对湿度 [-]
+RH_standard: 0.75
+
+# 初始扰动因子最大值 (±5%)
+disturb_factor_max: 0.05
+
+# 幼苗非结构干物质比例 [-]
+seedling_nonstruct_ratio: 0.15
+
+# Inlet seedling mass semantics for the ref_2 calibrated single-pool model.
+# Important:
+# - PFAL-DRL's legacy xDi = 0.72e-3 is an area dry-mass density [kg/m^2], not
+#   a per-plant inlet mass.
+# - This project assumes the 14-day sowing-to-emergence stage happens outside
+#   the container, so the inlet seedling should be heavier than the legacy xDi.
+# - Use explicit presets so simulation outputs always record which inlet-mass
+#   interpretation is active.
+initial_seedling_mass_preset: external_nursery_uniform
+
+initial_seedling_mass_presets:
+  strict_ref2:
+    description: "Exact ref_2 inlet seedling dry mass: 3e-5 kg/plant"
+    initial_seedling_mass_basis: per_plant_dry_mass
+    initial_seedling_dry_mass_per_plant: 3.0e-5
+    initial_seedling_mass: 3.0e-5
+  external_nursery_uniform:
+    description: "Recommended current-study default: uniform inlet seedling dry mass per plant for 14-day external nursery"
+    initial_seedling_mass_basis: per_plant_dry_mass
+    # Matched to the legacy 7.2e-3 kg/m^2 proxy at the canonical default
+    # schedule x={14,14,20,36,16}, where rho1 = 108 plants/m^2.
+    initial_seedling_dry_mass_per_plant: 6.666666666666667e-5
+    initial_seedling_mass: 6.666666666666667e-5
+  external_nursery_proxy:
+    description: "Legacy area-based inlet seedling proxy kept only for backward comparison"
+    initial_seedling_mass_basis: area_dry_mass_density
+    initial_seedling_area_dry_mass_density: 7.2e-3
+    initial_seedling_mass: 7.2e-3
+
+initial_seedling_mass_basis: per_plant_dry_mass
+
+# Legacy area-based inlet seedling total dry-mass density [kg/m^2].
+# Keep this value only so the historical proxy can still be reproduced.
+initial_seedling_area_dry_mass_density: 7.2e-3
+
+# Recommended current-study default inlet dry mass [kg/plant].
+# This is the physically cleaner choice when external nursery supplies uniform seedlings.
+initial_seedling_dry_mass_per_plant: 6.666666666666667e-5
+
+# Legacy ambiguous key kept for backward compatibility.
+initial_seedling_mass: 6.666666666666667e-5
+
+# 光强输入单位标志: true=μmol/m²/s, false=W/m²
+I_in_umol: true
+
+# Alias used by the steady-state initialiser; keep consistent with I_in_umol.
+I_standard_umol: true
+
+# =============================================================================
+# 环境默认值 (来源: PFAL-DRL, 用于环境模型稳态计算)
+# 被引用: environment_model.py (compute_steady_state_*, _steady_state_*)
+# =============================================================================
+
+# 默认育苗区光强 [μmol/m²/s]
+default_I1: 200.0
+
+# 默认定植区光强 [μmol/m²/s]
+default_I2: 200.0
+
+# 默认HVAC热功率密度 [W/m²]
+default_Q_HVAC: 0.0
+
+# 默认CO2注入速率 [kg/m²/s]
+default_u_CO2: 0.0
+
+# 漏风率（被动漏风常数，≈ 0.2 ACH）[m³/m²/s]
+# 公式: V_leak = 0.2 × V_container / A_grow / 3600 = 6.36e-5
+vent_leak_rate: 6.36e-5
+
+# 默认除湿速率 [kg/m²/s]
+default_m_dehum: 1.0e-05
+
+# 默认总蒸腾速率 [kg water/s]
+default_total_E: 1.0e-04
+
+# 默认总光合速率 [kg CO2/s]
+default_total_P: 1.0e-06
+
+# =============================================================================
+# 干物质物理约束 (来源: 本项目)
+# 被引用: batch_manager.py (_clamp_density_pair)
+# =============================================================================
+
+# 干物质边界 [kg/m²]
+xD_min: 0.0
+xD_max: 1.1
+xDn_min: 0.0
+xDn_max: 0.5
+xDs_min: 0.001
+xDs_max: 0.6
+
+# =============================================================================
+# 环境模型初始状态 (来源: PFAL-DRL)
+# 被引用: environment_model.py (compute_steady_state_*)
+# =============================================================================
+
+# 默认CO2密度 [kg/m³] ≈ 700 ppm
+default_C: 7.0e-4
+
+# =============================================================================
+# 环境状态数值保护参数
+# 被引用: environment_model.py (simulate_environment_step)
+# =============================================================================
+
+# 温度状态后处理钳位范围 [°C]
+t_state_clip_lo: -5.0
+t_state_clip_hi: 50.0
+
+# 单步 CO2 最大允许变化量 [ppm]
+# 主要用于数值稳定，不应设置得过小，否则会压制真实 CO2 动态。
+co2_step_delta_ppm_cap: 2000.0
+
+# 步末显式凝结调整所用的目标相对饱和度 [-]
+# 0.995 表示接近饱和时允许结露回调，同时避免长期保持非物理超饱和。
+humidity_clip_saturation_ratio: 0.995

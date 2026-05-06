@@ -1,0 +1,172 @@
+# =============================================================================
+# Tianshou SAC 超参数配置文件
+#
+# 本文件供 experiments/train_pfal_contextual.py 使用。
+# load_rl_params() 读取以下键：
+#   epoch, nstep, batch_size, hidden_sizes(policy_net_arch),
+#   gamma, actor_lr, critic_lr, alpha_lr,
+#   train_num, test_num, buffer_size, seed
+#
+# 所有其他键（如 algorithm、clip_range、ent_coef 等）为 PPO 特有，
+# train_pfal_contextual.py 不会读取，已移除。
+# =============================================================================
+
+# =============================================================================
+# 训练长度
+# =============================================================================
+
+# 最大训练轮数（每轮收集 nstep 步后进行一次策略更新）
+epoch: 50
+
+# nstep 会在 auto_nstep=true 时按当前 schedule space 与训练 horizon 自动重算
+# 当前默认 horizon_profile=fast_t2max，对应 t2_max=18d -> 2592 steps。
+# 若切回 mainline_long_horizon，则 train mixed/max_total_cycle 的参考上限约为 4608 steps。
+nstep: 2592
+auto_nstep: true
+nstep_factor: 1.0
+
+# 每次更新的批大小
+batch_size: 512
+
+# =============================================================================
+# 网络结构
+# =============================================================================
+
+# 策略网络隐藏层大小（同时用于 Actor 和 Critic）
+policy_net_arch: [128, 128]
+
+# =============================================================================
+# 折扣因子
+# =============================================================================
+
+gamma: 0.99
+# Note: for the current long-horizon schedule space, gamma=0.99 remains the default; 0.999 tends to over-smooth TD errors.
+
+# =============================================================================
+# 学习率
+# =============================================================================
+
+actor_lr: 3.0e-4
+critic_lr: 3.0e-4
+alpha_lr: 3.0e-4
+
+# =============================================================================
+# 并行环境
+# =============================================================================
+
+# 训练环境数量（DummyVectorEnv）
+train_num: 4
+
+# 测试环境数量
+test_num: 1
+initial_random_episodes: 4
+# 每次先收集更多环境步，再批量执行更新，可减少 trainer 循环开销；
+# 不改变奖励定义、状态动作设计和总训练步数预算。
+step_per_collect_env_steps: 8
+update_per_step: 1.0
+vector_env_backend: "auto"
+test_interval_epochs: 10
+info_detail_level: "compact"
+
+# =============================================================================
+# 经验回放缓冲区
+# =============================================================================
+
+buffer_size: 1000000
+
+# =============================================================================
+# 随机种子
+# =============================================================================
+
+seed: 42
+
+# =============================================================================
+# 上下文强化学习参数（代码中未从本文件读取，仅作记录）
+# =============================================================================
+
+# 上下文是否包含上一步动作
+context_include_prev_action: true
+
+# 上下文归一化方式: "linear", "minmax", "standardize"
+
+# =============================================================================
+# 采样策略（代码中未从本文件读取，仅作记录）
+# =============================================================================
+
+# 排程采样阶段:
+#   "full"
+#   "narrow"
+#   "fixed"
+#   "full_min_feasible"
+#   "full_target_feasible"
+#   "full_infeasible"
+context_sampling_phase: "full"
+context_curriculum: null
+horizon_profile: "fast_t2max"
+curriculum_profile: "off"
+episode_length_mode: "max_t2"
+episode_days:
+episode_length_mix:
+  - mode: "max_t2"
+    weight: 0.7
+  - mode: "max_total_cycle"
+    weight: 0.3
+train_episode_length_mode: "max_t2"
+train_episode_days:
+test_episode_length_mode: "max_t2"
+test_episode_days:
+eval_episode_length_mode: "max_t2"
+eval_episode_days:
+# 切回主线长时域训练时，推荐改为：
+# horizon_profile: "mainline_long_horizon"
+# nstep: 4608   # auto_nstep=true 时仅作占位
+# nstep_factor: 1.0   # 若训练太慢，可改 0.5~0.75
+# train_episode_length_mode: "mixed"
+enable_action_safety_projection: true
+safety_temp_guard_band_c: 3.0
+safety_temp_projection_margin_c: 0.5
+safety_temp_kp: 60.0
+train_hour_of_day_mode: "random"
+test_hour_of_day_mode: "random"
+eval_hour_of_day_mode: "fixed"
+observation_semantics: "target31_v2"
+action_semantics: "residual_pid"
+residual_action_scale: [0.50, 0.50, 0.35, 0.35, 0.35]
+light_control_mode: "step"
+light_segments_per_photoperiod: 3
+include_electricity_price_observation: false
+controller_design: "residual_pid_sac"
+residual_gate_min: 0.0
+runtime_profile: "default"
+train_context_sampling_strategy: "distributed_cycle"
+train_context_sampling_reference_weights: null
+constraint_selection_interval_epochs: 50
+constraint_selection_start_epoch: 50
+constraint_selection_n_schedules: 4
+constraint_selection_n_episodes_per_schedule: 3
+constraint_selection_reward_weight: 1.0
+constraint_selection_constraint_cost_weight: 1.0
+constraint_selection_constraint_active_ratio_weight: 0.0
+constraint_selection_cost_mode: overall
+constraint_selection_early_termination_weight: 10.0
+constraint_selection_harvest_fail_weight: 5.0
+constraint_selection_safety_override_weight: 0.1
+
+# 天气采样方法
+weather_sampling: "random_tmy"
+
+# =============================================================================
+# 评估参数（代码中未从本文件读取，仅作记录）
+# =============================================================================
+
+n_eval_schedules: 10
+n_eval_episodes_per_schedule: 5
+eval_schedule_selection: "reference_stratified"
+
+# =============================================================================
+# WandB 日志参数（代码中未从本文件读取，由命令行参数指定）
+# =============================================================================
+
+use_wandb: true
+wandb_project: "PFAL-contextual-SAC"
+wandb_run_name: "contextual_sac"

@@ -1,0 +1,208 @@
+# ============================================================================
+# Reward and constraint configuration for contextual PFAL RL.
+#
+# Design notes
+# - Soft reward terms are normalized by the references below, then scaled by
+#   `reward_scale`.
+# - Climate / daily-light / event / safety penalties are expressed in the same
+#   economic unit as the runtime objective and are not duplicated elsewhere.
+# - Thermal meltdown is treated as a hard safety termination with an explicit
+#   penalty and separate constraint accounting.
+# - Canonical runtime economics are defined only by:
+#     lettuce_price_fw, electricity_price, co2_price
+#   Legacy `price_*` fields were removed from this file to avoid ambiguity.
+# ============================================================================
+
+# ============================================================================
+# Base economic shaping
+# ============================================================================
+
+# Growth shaping coefficient [currency / g dry mass]
+alpha_growth: 0.5
+
+# Reward scaling for normalized soft terms.
+reward_scale: 1.0
+economic_reward_reference: 0.10
+climate_penalty_reference: 5.0
+daily_penalty_reference: 10.0
+harvest_event_penalty_reference: 50.0
+safety_override_reference: 0.25
+thermal_meltdown_reference: 100.0
+ode_failure_reference: 10.0
+
+# Canonical runtime economics used by the simulator and RL environment.
+lettuce_price_fw: 40.0
+electricity_price: 0.74
+co2_price: 0.54
+
+# ============================================================================
+# Hard safety termination
+# ============================================================================
+
+# Fixed penalty applied when a thermal safety termination happens.
+thermal_meltdown_penalty: -100.0
+
+# Soft termination band [deg C].
+thermal_meltdown_temp_lo: 15.0
+thermal_meltdown_temp_hi: 32.0
+
+# Mild excursions must persist for hold_seconds before termination.
+thermal_meltdown_hold_seconds: 1800.0
+
+# Hard termination band [deg C] for immediate catastrophic stop.
+thermal_meltdown_temp_lo_hard: 12.0
+thermal_meltdown_temp_hi_hard: 35.0
+
+# ============================================================================
+# Temperature constraints
+# ============================================================================
+
+# Daytime ideal / acceptable ranges [deg C]
+temp_light_ideal_lo: 22.0
+temp_light_ideal_hi: 25.0
+temp_light_accept_lo: 20.0
+temp_light_accept_hi: 26.0
+
+# Nighttime ideal / acceptable ranges [deg C]
+temp_night_ideal_lo: 18.0
+temp_night_ideal_hi: 21.0
+temp_night_accept_lo: 16.0
+temp_night_accept_hi: 24.0
+
+# Step penalties [currency / deg C / step]
+temp_mild_penalty: -0.5
+temp_severe_penalty: -2.0
+
+# ============================================================================
+# Relative humidity constraints
+# ============================================================================
+
+# Daytime ideal / acceptable ranges [%]
+rh_light_ideal_lo: 65.0
+rh_light_ideal_hi: 80.0
+rh_light_accept_lo: 50.0
+rh_light_accept_hi: 90.0
+
+# Nighttime ideal / acceptable ranges [%]
+rh_night_ideal_lo: 70.0
+rh_night_ideal_hi: 85.0
+rh_night_accept_lo: 55.0
+rh_night_accept_hi: 90.0
+
+# Step penalty [currency / %RH / step]
+rh_penalty: -0.05
+
+# ============================================================================
+# CO2 constraints
+# ============================================================================
+
+# Daytime ideal / acceptable ranges [ppm]
+co2_light_ideal_lo: 800.0
+co2_light_ideal_hi: 1000.0
+co2_light_accept_lo: 400.0
+co2_light_accept_hi: 1100.0
+
+# Night upper bound [ppm]
+co2_night_max: 1500.0
+
+# Step penalties [currency / ppm / step]
+co2_mild_penalty: -0.05
+co2_severe_penalty: -0.20
+
+# ============================================================================
+# Daily light integral constraints
+# ============================================================================
+
+# Mainline recommendation: do not use a single average-DLI reward in the
+# dual-zone dense/finishing PFAL. Keep zone-wise DLI as diagnostics and rely on
+# growth / harvest economics to value light delivery.
+daily_dli_penalty_mode: "disabled"
+
+dli_ideal_min: 12.0
+dli_ideal_max: 17.0
+dli_accept_min: 8.0
+dli_accept_max: 20.0
+
+# Daily penalties [currency / (mol m^-2 d^-1) / day]
+dli_low_penalty: -10.0
+dli_high_penalty: -2.0
+
+# ============================================================================
+# Photoperiod constraints
+# ============================================================================
+
+# With PP fixed by the upper-layer schedule, photoperiod acts only as a
+# lower-layer realization guard around the scheduled light window.
+daily_photoperiod_penalty_mode: "fixed_schedule_guard"
+photoperiod_guard_tolerance_h: 0.25
+
+# Legacy band fallback used only when daily_photoperiod_penalty_mode="band".
+photoperiod_ideal_min: 16.0
+photoperiod_ideal_max: 16.0
+photoperiod_accept_min: 16.0
+photoperiod_accept_max: 16.0
+
+# Daily penalties [currency / h / day]
+photoperiod_low_penalty: -10.0
+photoperiod_high_penalty: -3.0
+
+# ============================================================================
+# Event penalties and harvest target shaping
+# ============================================================================
+
+# Event-level penalties [currency]
+# "constraint_only" keeps harvest-fail out of the dense step reward and leaves
+# it as a terminal soft-constraint / model-selection signal.
+harvest_fail_penalty_mode: "constraint_only"
+harvest_fail_penalty: 50.0
+safety_override_base_penalty: 0.15
+safety_override_q_hvac_penalty: 0.60
+
+# Minimum acceptable harvest dry mass per plant [g dry mass / plant]
+# 100 g FW pass line with c_fw = 22.5 => 100 / 22.5 ~= 4.44 g DW
+harvest_min_dry_mass_per_plant: 4.44
+
+# Harvest target dry mass per plant [g dry mass / plant]
+# 120 g FW target with c_fw = 22.5 => 120 / 22.5 ~= 5.33 g DW
+harvest_target_dry_mass_per_plant: 5.33
+
+# Dense shaping before harvest to reduce sparse event feedback.
+harvest_target_shaping_window_days: 3.0
+harvest_target_shaping_gain: 1.0
+
+# Transplant damage fraction [-]
+transplant_loss_rate: 0.0
+
+# ============================================================================
+# Top-level term weights
+# ============================================================================
+
+weight_growth: 1.0
+weight_cost: 1.0
+weight_penalty: 1.0
+weight_harvest_target: 1.0
+
+# ============================================================================
+# Deprecated keys kept here only as commented historical reference.
+# They are not used by the current runtime.
+# ============================================================================
+
+# temp_soft_min: 18.0
+# temp_soft_max: 28.0
+# temp_deviation_penalty: -3.0
+# temp_severe_deviation_threshold: 5.0
+# temp_severe_multiplier: 3.0
+
+# rh_soft_min: 60.0
+# rh_soft_max: 80.0
+# rh_deviation_penalty: -0.5
+
+# co2_light_min_ppm: 400.0
+# co2_light_penalty: -0.5
+
+# photoperiod_target: 16.0
+# photoperiod_min: 14.0
+# photoperiod_max: 18.0
+# photoperiod_deviation_penalty: -5.0
+
+# light_change_penalty_coef: 0.0

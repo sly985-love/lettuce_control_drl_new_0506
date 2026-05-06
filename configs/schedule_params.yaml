@@ -1,0 +1,72 @@
+# =============================================================================
+# Schedule-space configuration for the code_0420 fixed-photoperiod mainline.
+# Upper-layer design space: x = {t1, t2, N1, rho2} in Z^4.
+# The runtime photoperiod is fixed at PP = 16 h unless explicitly overridden
+# for sensitivity analysis.
+# =============================================================================
+
+# Discrete decision bounds
+t1_min: 10
+t1_max: 18
+t2_min: 10
+t2_max: 18
+N1_min: 8
+N1_max: 20
+rho2_min: 20
+rho2_max: 52
+PP_min: 16
+PP_max: 16
+PP_fixed: 16
+
+# Derived structural constraints
+rho1_min: 72.0
+rho1_max: 144.0
+er_min: 3.0
+er_max: 6.0
+total_cycle_min: 24
+total_cycle_max: 32
+DT_values: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]
+
+# Geometry
+A_total: 80.0
+A_board: 1.0
+N_total: 80
+
+# BO helper bounds should match the same 4D upper recipe space
+bo_continuous_bounds:
+  t1: [10, 18]
+  t2: [10, 18]
+  N1: [8, 20]
+  rho2: [20, 52]
+
+bo_rho2_typical_values: [20, 36, 52]
+
+# Photoperiod / DLI soft references
+photoperiod_ideal_min: 16.0
+photoperiod_ideal_max: 16.0
+photoperiod_accept_min: 16.0
+photoperiod_accept_max: 16.0
+
+max_continuous_light_hours: 18.0
+min_continuous_dark_hours: 6.0
+
+dli_ideal_min: 12.0
+dli_ideal_max: 17.0
+dli_accept_min: 8.0
+dli_accept_max: 20.0
+
+# Action rate limits
+rate_limit_I: 100.0
+rate_limit_Q: 42.4
+rate_limit_CO2: 2.778e-5
+rate_limit_V: 2.084e-3
+rate_limit_m: 4.167e-6
+
+# BO defaults
+gp_kernel: "Matern"
+gp_kernel_nu: 2.5
+bo_initial_points: 10
+bo_iterations: 40
+acquisition_function: "EI"
+objective_repeats: 3
+objective_weather: "TMY"
